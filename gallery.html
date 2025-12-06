@@ -113,6 +113,32 @@
             background: rgba(255, 255, 255, 1);
             transform: scale(1.1);
         }
+        
+        #enter-room-button {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 3px solid white;
+            padding: 15px 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 200;
+            font-size: 20px;
+            font-weight: bold;
+            display: none;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        #enter-room-button:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transform: translateX(-50%) scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -127,7 +153,9 @@
         <img id="expanded-note-image" src="" alt="Expanded Note">
     </div>
     
+    <button id="enter-room-button">Enter Next Room</button>
+    
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="gallery3d.js?v=51"></script>
+    <script src="gallery3d.js?v=71"></script>
 </body>
 </html>
