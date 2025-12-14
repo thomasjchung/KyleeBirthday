@@ -1279,20 +1279,20 @@ function enterPreviousRoom() {
 }
 
 function loadPaintings() {
-    // All available paintings (up to 18)
-    const allImageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+    // All available paintings (up to 19)
+    const allImageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
     // Map of image numbers to their actual file extensions
     const imageExtensions = {
         1: 'jpeg', 2: 'jpeg', 3: 'jpeg', 4: 'jpg', 5: 'png',
         6: 'jpg', 7: 'jpeg', 8: 'jpeg', 9: 'png', 10: 'jpeg',
-        11: 'jpeg', 12: 'jpeg', 13: 'jpeg', 14: 'png', 15: 'jpg', 16: 'jpeg', 17: 'jpg', 18: 'jpeg'
+        11: 'jpeg', 12: 'jpeg', 13: 'jpeg', 14: 'png', 15: 'jpg', 16: 'jpeg', 17: 'jpg', 18: 'jpeg', 19: 'jpg'
     };
     // Map of note numbers to their actual file extensions (only for notes that exist)
     const noteExtensions = {
         1: 'jpg', 2: 'jpg', 3: 'jpeg', 4: 'jpg', 5: 'png',
         6: 'jpg', 7: 'jpg', 8: 'jpg', 9: 'jpg',
         10: 'png', 11: 'jpeg', 12: 'jpg', 13: 'jpg',
-        14: 'jpeg', 15: 'png', 16: 'jpg', 17: 'jpg', 18: 'jpeg'
+        14: 'jpeg', 15: 'png', 16: 'jpg', 17: 'jpg', 18: 'jpeg', 19: 'jpg'
     };
     
     // Calculate which paintings to show for current room (10 per room)
@@ -1300,6 +1300,8 @@ function loadPaintings() {
     const startIndex = (currentRoom - 1) * paintingsPerRoom;
     const endIndex = Math.min(startIndex + paintingsPerRoom, allImageNumbers.length);
     const imageNumbers = allImageNumbers.slice(startIndex, endIndex);
+    
+    console.log(`[ROOM] Loading room ${currentRoom}: paintings ${imageNumbers.join(', ')} (indices ${startIndex} to ${endIndex-1})`);
     
     // Check if there are more rooms available
     const hasMoreRooms = endIndex < allImageNumbers.length;
@@ -1352,7 +1354,16 @@ function loadPaintings() {
         setTimeout(() => {
         if (scene.userData.backWall) {
                 // Find the last painting and get its actual back edge
-                const lastPainting = paintings[paintings.length - 1];
+                // Try multiple methods to find the last painting reliably
+                let lastPainting = paintings[paintings.length - 1];
+                
+                // Fallback: find painting with highest Z position
+                if (!lastPainting || paintings.length === 0) {
+                    lastPainting = paintings.reduce((max, p) => {
+                        return (!max || p.position.z > max.position.z) ? p : max;
+                    }, null);
+                }
+                
                 let lastPaintingBackZ = lastPaintingZ;
                 
                 // Get the frame mesh to calculate its actual back edge
@@ -1370,10 +1381,17 @@ function loadPaintings() {
                         const box = new THREE.Box3().setFromObject(frameMesh);
                         // Get the maximum Z (back edge) of the frame
                         lastPaintingBackZ = box.max.z;
+                        console.log(`[BACKWALL] Found last painting frame, back edge at Z=${lastPaintingBackZ.toFixed(2)}`);
+                    } else {
+                        // Fallback: use painting position + estimated frame depth
+                        lastPaintingBackZ = lastPainting.position.z + 0.1; // Frame extends 0.1 units forward
+                        console.log(`[BACKWALL] Using fallback calculation, estimated back edge at Z=${lastPaintingBackZ.toFixed(2)}`);
                     }
+                } else {
+                    console.warn(`[BACKWALL] No last painting found, using lastPaintingZ=${lastPaintingZ.toFixed(2)}`);
                 }
                 
-            const backWallOffset = 5; // Space past last painting
+            const backWallOffset = 8; // Increased space past last painting to ensure visibility
                 const newBackWallZ = lastPaintingBackZ + backWallOffset;
             scene.userData.backWall.position.z = newBackWallZ;
             
@@ -1412,7 +1430,7 @@ function loadPaintings() {
             MAX_Z = wallFrontFaceZ - stopBuffer;
             console.log(`[SETUP] Movement bound updated to MAX_Z=${MAX_Z.toFixed(2)} (back wall front face at ${wallFrontFaceZ.toFixed(2)})`);
         }
-        }, 500); // Wait 500ms for frames to load
+        }, 1000); // Increased timeout to 1000ms to ensure all paintings (including 19) are fully loaded
 
         // Setup lighting after paintings are created
         setupMuseumLighting();
